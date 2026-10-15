@@ -1,14 +1,20 @@
 """
 DeepEval HallucinationMetric 最小示例
 
-运行（在项目根目录）：
+运行（在项目根目录，确保 .env 已配好 DeepSeek）：
     /Users/Zhuanz/miniconda3/bin/python learn-deepeval/src/hallucination_demo.py
 
 或激活 conda base 后：
     python learn-deepeval/src/hallucination_demo.py
 
-需要 OPENAI_API_KEY（或其他 LLM provider key）在环境变量中。
+LLM provider 由 .env 中的 USE_DEEPSEEK_MODEL / DEEPSEEK_API_KEY 控制。
 """
+
+import os
+from pathlib import Path
+
+# 让 deepeval 加载项目根的 .env
+os.chdir(Path(__file__).resolve().parents[2])
 
 from deepeval.metrics import HallucinationMetric
 from deepeval.test_case import LLMTestCase

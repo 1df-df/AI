@@ -1,10 +1,18 @@
 """
 用 pytest + deepeval 做幻觉评测（CI / 批量跑推荐方式）
 
-运行：
+运行（在项目根目录，确保 .env 已配好 DeepSeek）：
     cd /Users/Zhuanz/Desktop/Code/AI
     /Users/Zhuanz/miniconda3/bin/python -m pytest learn-deepeval/tests/test_hallucination.py -v
+
+LLM provider 由 .env 中的 USE_DEEPSEEK_MODEL / DEEPSEEK_API_KEY 控制。
 """
+
+import os
+from pathlib import Path
+
+# 让 deepeval 加载项目根的 .env（pytest 从项目根运行时生效）
+os.chdir(Path(__file__).resolve().parents[2])
 
 import pytest
 from deepeval import assert_test

@@ -37,9 +37,14 @@ learn-deepeval/
 ## 环境
 
 ```bash
-python -m venv .venv
-source .venv/bin/activate
-pip install -U deepeval
+# 使用 conda base（Python 3.13）
+/Users/Zhuanz/miniconda3/bin/python -m pip install -U deepeval
 ```
 
-需要配置模型 API Key（如 `OPENAI_API_KEY`），放在仓库根目录 `.env`（已被 gitignore）。
+### DeepSeek 配置
+
+1. 复制模板：`cp .env.example .env`（`.env` 已被 gitignore）
+2. 编辑 `.env`，填入 `DEEPSEEK_API_KEY`
+3. 验证接入：`/Users/Zhuanz/miniconda3/bin/python learn-deepeval/src/verify_deepseek.py`
+
+deepeval 会自动读取项目根目录的 `.env`，无需手动 export。
