@@ -20,11 +20,11 @@ from deepeval.metrics import HallucinationMetric
 from deepeval.test_case import LLMTestCase
 
 
-def make_case(name: str, input_text: str, output: str, context: list[str]) -> LLMTestCase:
+def make_case(input_text: str, output: str, context: list[str]) -> LLMTestCase:
     return LLMTestCase(
         input=input_text,
         actual_output=output,
-        retrieval_context=context,
+        context=context,
     )
 
 
@@ -37,40 +37,47 @@ context = [
 
 cases = [
     # ✅ 忠实于上下文 → 不应判为幻觉
-    make_case(
-        name="faithful",
-        input_text="Qoder 支持哪些平台？",
-        output="Qoder 支持 macOS、Windows 和 Linux 三个平台。",
-        context=context,
+    (
+        "faithful",
+        make_case(
+            input_text="Qoder 支持哪些平台？",
+            output="Qoder 支持 macOS、Windows 和 Linux 三个平台。",
+            context=context,
+        ),
     ),
     # ❌ 编造了上下文中不存在的事实 → 应判为幻觉
-    make_case(
-        name="hallucinated",
-        input_text="Qoder 支持哪些平台？",
-        output="Qoder 支持 macOS、Windows、Linux 以及 iOS 和 Android 移动端。",
-        context=context,
+    (
+        "hallucinated",
+        make_case(
+            input_text="Qoder 支持哪些平台？",
+            output="Qoder 支持 macOS、Windows、Linux 以及 iOS 和 Android 移动端。",
+            context=context,
+        ),
     ),
     # ⚠️ 部分正确 + 部分捏造
-    make_case(
-        name="partial",
-        input_text="Qoder 有哪些核心能力？",
-        output="Qoder 支持 MCP 协议、Skills 技能系统，并且自带向量数据库 RAG 引擎。",
-        context=context,
+    (
+        "partial",
+        make_case(
+            input_text="Qoder 有哪些核心能力？",
+            output="Qoder 支持 MCP 协议、Skills 技能系统，并且自带向量数据库 RAG 引擎。",
+            context=context,
+        ),
     ),
 ]
 
 
 def main() -> None:
-    metric = HallucinationMetric(threshold=0.5)
+    # 新版 deepeval：score 1=无幻觉（通过），0=有幻觉；threshold 是最低通过分
+    metric = HallucinationMetric(threshold=0.8)
 
     print(f"{'case':<14} {'score':>6} {'pass':>6}  reason")
     print("-" * 90)
 
-    for case in cases:
+    for name, case in cases:
         metric.measure(case)
-        status = "✅" if case.score >= metric.threshold else "❌"
+        status = "✅" if metric.score >= metric.threshold else "❌"
         reason = (metric.reason or "")[:60]
-        print(f"{case.name:<14} {case.score:>6.2f} {status:>6}  {reason}")
+        print(f"{name:<14} {metric.score:>6.2f} {status:>6}  {reason}")
 
 
 if __name__ == "__main__":

@@ -52,19 +52,20 @@ CONTEXT = [
     ids=["faithful", "hallucinated", "partial"],
 )
 def test_no_hallucination(name, input_text, output, expected_pass):
-    """验证模型回答不超出 retrieval_context 的范围。"""
+    """验证模型回答不超出 context 的范围。"""
     case = LLMTestCase(
         input=input_text,
         actual_output=output,
-        retrieval_context=CONTEXT,
+        context=CONTEXT,
     )
-    metric = HallucinationMetric(threshold=0.5)
+    # 新版 deepeval：score 1=无幻觉，threshold 是最低通过分
+    metric = HallucinationMetric(threshold=0.8)
 
     if expected_pass:
         assert_test(case, [metric])
     else:
         # 预期会失败的用例：确认 metric 确实能抓到幻觉
         metric.measure(case)
-        assert case.score < metric.threshold, (
-            f"case={name} 本应被判为幻觉，但 score={case.score:.2f}"
+        assert metric.score < metric.threshold, (
+            f"case={name} 本应被判为幻觉，但 score={metric.score:.2f}"
         )
