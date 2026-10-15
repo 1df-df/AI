@@ -19,6 +19,11 @@ from deepeval import assert_test
 from deepeval.metrics import HallucinationMetric
 from deepeval.test_case import LLMTestCase
 
+# 复用 src 目录下的中文 prompt 模板子类
+import sys
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
+from hallucination_demo import ChineseHallucinationTemplate
+
 
 CONTEXT = [
     "Qoder 是一款桌面端 AI 编程助手，支持 macOS、Windows 和 Linux。",
@@ -58,13 +63,15 @@ def test_no_hallucination(name, input_text, output, expected_pass):
         actual_output=output,
         context=CONTEXT,
     )
-    # 新版 deepeval：score 1=无幻觉，threshold 是最低通过分
-    metric = HallucinationMetric(threshold=0.8)
+    # 新版 deepeval：score 1=无幻觉，threshold 是最低通过分；用中文模板让 reason 输出中文
+    metric = HallucinationMetric(
+        threshold=0.8, evaluation_template=ChineseHallucinationTemplate
+    )
 
     if expected_pass:
         assert_test(case, [metric])
     else:
-        # 预期会失败的用例：确认 metric 确实能抓到幻觉
+        # 预期失败的用例：直接 measure，避免 assert_test 内部重复调用导致状态异常
         metric.measure(case)
         assert metric.score < metric.threshold, (
             f"case={name} 本应被判为幻觉，但 score={metric.score:.2f}"

@@ -32,7 +32,28 @@ learn-deepeval/
 
 ## 笔记
 
-（待补充）
+### 新版 deepeval API 变化（2026-10）
+
+- `LLMTestCase` 字段：幻觉评测用 `context`（不再是 `retrieval_context`）；`context` 为 None 会抛 `MissingTestCaseParamsError`
+- 评分方向反转：score 1 = 通过、0 = 失败，threshold 是**最低通过分**。旧版 threshold=0.5 现在应写 0.8
+- `.score` 在 `metric` 对象上读取，不在 `case` 上
+- `LLMTestCase` 没有 `name` 字段，用例标签需用外部配对管理
+- 未注册模型（如 `deepseek-flash`）不会报错，但必须手动设 `DEEPSEEK_COST_PER_INPUT_TOKEN` / `DEEPSEEK_COST_PER_OUTPUT_TOKEN`，否则 cost=None
+
+### 中文 reason 输出
+
+默认 prompt 是英文，judge 返回的 `reason` 也是英文。要中文化需子类化 `HallucinationTemplate`，覆盖 `generate_verdicts` 和 `generate_reason` 两个静态方法，再通过 `HallucinationMetric(evaluation_template=...)` 传入。见 `src/hallucination_demo.py::ChineseHallucinationTemplate`。
+
+### LLM judge 的非确定性 ⚠️
+
+同一用例多次运行分数可能不同（实测 faithful 用例 demo 跑 1.00、pytest 跑 0.33）。原因：
+- DeepSeek 等生成式 judge 本身有随机性（即使 temperature=0 也可能漂移）
+- `assert_test` 内部走 async 路径，与直接 `metric.measure()` 行为略有差异
+
+应对：
+- CI 里对关键用例设置重试或取 N 次平均分
+- prompt 设计要明确"缺少细节 → yes"的宽容规则，减少边界 case 的抖动
+- 不要期望单次评测分数绝对稳定，趋势比单点更重要
 
 ## 环境
 
